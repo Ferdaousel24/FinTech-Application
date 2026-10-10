@@ -1,5 +1,7 @@
 package org.mql.microservices.accounts_service.accounts_service.services;
 
+import org.mql.microservices.accounts_service.accounts_service.exceptions.AccountNotFoundException;
+import org.mql.microservices.accounts_service.accounts_service.exceptions.InsufficientFundsException;
 import org.mql.microservices.accounts_service.accounts_service.models.Account;
 import org.mql.microservices.accounts_service.accounts_service.repositories.AccountRepository;
 import org.springframework.stereotype.Service;
@@ -45,14 +47,14 @@ public class AccountService {
     public Account withdraw(UUID id, BigDecimal amount) {
         Account account = findOrThrow(id);
         if (account.getBalance().compareTo(amount) < 0) {
-            throw new RuntimeException("Insufficient funds: balance=" + account.getBalance() + ", requested=" + amount);
-        }
+          throw new InsufficientFundsException(account.getBalance(), amount);
+      }
         account.setBalance(account.getBalance().subtract(amount));
         return account;
     }
 
     private Account findOrThrow(UUID id) {
-        return accountRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Account not found: " + id));
-    }
+      return accountRepository.findById(id)
+            .orElseThrow(() -> new AccountNotFoundException(id));
+}
 }
